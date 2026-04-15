@@ -1,5 +1,6 @@
 from django.views import generic
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -25,7 +26,7 @@ class PostList(generic.ListView):
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status=1)
 
-    # 如果你的 Comment 模型里有 related_name='comments'，这里可以这样写
+
     comments = post.comments.all()
 
     if request.method == 'POST':
@@ -103,3 +104,47 @@ def logout_request(request):
     logout(request)
     messages.info(request, "You have successfully logged out.")
     return redirect("home")
+
+
+#  Cookie test 
+def cookie_session(request):
+    request.session.set_test_cookie()
+    return HttpResponse("<h1>Test cookie has been set.</h1>")
+
+
+def cookie_delete(request):
+    if request.session.test_cookie_worked():
+        request.session.delete_test_cookie()
+        return HttpResponse("<h1>Your browser accepts cookies.</h1>")
+    else:
+        return HttpResponse("<h1>Your browser does not accept cookies.</h1>")
+
+
+#  Session demo 
+def create_session(request):
+    request.session['name'] = 'username'
+    request.session['password'] = 'password123'
+    return HttpResponse("<h1>Session is set.</h1>")
+
+
+def access_session(request):
+    response = "<h1>Session data:</h1>"
+
+    if request.session.get('name'):
+        response += f"<p>Name: {request.session.get('name')}</p>"
+
+    if request.session.get('password'):
+        response += f"<p>Password: {request.session.get('password')}</p>"
+        return HttpResponse(response)
+    else:
+        return redirect('/session/create/')
+
+
+def delete_session(request):
+    try:
+        del request.session['name']
+        del request.session['password']
+    except KeyError:
+        pass
+
+    return HttpResponse("<h1>Session data cleared.</h1>")
