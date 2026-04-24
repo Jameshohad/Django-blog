@@ -1,0 +1,12 @@
+INFO 2026-04-24 14:48:03,719 Cache miss: homepage post list loaded from database and stored in cache.
+INFO 2026-04-24 14:48:24,172 Successful login for user=admin.
+INFO 2026-04-24 14:48:24,244 Cache hit: homepage post list loaded from cache.
+INFO 2026-04-24 14:48:30,160 User logged out: admin.
+INFO 2026-04-24 14:48:30,181 Cache hit: homepage post list loaded from cache.
+WARNING 2026-04-24 14:49:01,067 User registration failed because form validation failed.
+WARNING 2026-04-24 14:49:35,159 User registration failed because form validation failed.
+WARNING 2026-04-24 14:49:55,091 User registration failed because form validation failed.
+INFO 2026-04-24 14:50:45,766 New user registered: steve@.
+INFO 2026-04-24 14:50:45,793 Cache miss: homepage post list loaded from database and stored in cache.
+INFO 2026-04-24 14:51:40,343 Cache hit: homepage post list loaded from cache.
+INFO 2026-04-24 14:51:42,260 Cache hit: homepage post list loaded from cache.

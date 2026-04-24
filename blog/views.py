@@ -10,7 +10,10 @@ from rest_framework import viewsets
 from .models import Post
 from .forms import NewUserForm, CommentForm
 from .serializers import PostSerializer
+import logging
+from django.core.cache import cache
 
+logger = logging.getLogger("blog")
 
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
@@ -18,19 +21,28 @@ class PostViewSet(viewsets.ModelViewSet):
 
 
 class PostList(generic.ListView):
-    queryset = Post.objects.filter(status=1).order_by('-created_on')
     template_name = 'index.html'
     context_object_name = 'post_list'
 
+    def get_queryset(self):
+        cached_posts = cache.get("home_post_list")
+
+        if cached_posts is None:
+            cached_posts = list(Post.objects.filter(status=1).order_by('-created_on'))
+            cache.set("home_post_list", cached_posts, 60)
+            logger.info("Cache miss: homepage post list loaded from database and stored in cache.")
+        else:
+            logger.info("Cache hit: homepage post list loaded from cache.")
+
+        return cached_posts
 
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status=1)
-
-
     comments = post.comments.all()
 
     if request.method == 'POST':
         if not request.user.is_authenticated:
+            logger.warning(f"Unauthorized comment attempt on post slug={post.slug}.")
             messages.error(request, "You must log in before posting a comment.")
             return redirect('login')
 
@@ -40,6 +52,7 @@ def post_detail(request, slug):
             new_comment.post = post
             new_comment.author = request.user
             new_comment.save()
+            logger.info(f"Comment added on post slug={post.slug} by user={request.user.username}.")
             messages.success(request, "Comment added successfully.")
             return redirect('post_detail', slug=post.slug)
     else:
@@ -62,8 +75,10 @@ def register_request(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            logger.info(f"New user registered: {user.username}.")
             messages.success(request, "Registration successful.")
             return redirect("home")
+        logger.warning("User registration failed because form validation failed.")
         messages.error(request, "Unsuccessful registration. Invalid information.")
     else:
         form = NewUserForm()
@@ -84,11 +99,14 @@ def login_request(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
+                logger.info(f"Successful login for user={username}.")
                 messages.info(request, f"You are now logged in as {username}.")
                 return redirect("home")
             else:
+                logger.warning(f"Failed login attempt for username={username}.")
                 messages.error(request, "Invalid username or password.")
         else:
+            logger.warning(f"Failed login attempt for username={username}.")
             messages.error(request, "Invalid username or password.")
     else:
         form = AuthenticationForm()
@@ -101,7 +119,9 @@ def login_request(request):
 
 
 def logout_request(request):
+    username = request.user.username if request.user.is_authenticated else "anonymous"
     logout(request)
+    logger.info(f"User logged out: {username}.")
     messages.info(request, "You have successfully logged out.")
     return redirect("home")
 

@@ -129,3 +129,45 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "blog-local-cache",
+        "TIMEOUT": 60,
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,
+            "CULL_FREQUENCY": 3,
+        },
+        "KEY_PREFIX": "django_blog",
+    }
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "simple": {
+            "format": "{levelname} {asctime} {message}",
+            "style": "{",
+        },
+    },
+
+    "handlers": {
+        "blog_file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": str(BASE_DIR / "blog.log"),
+            "formatter": "simple",
+        },
+    },
+
+    "loggers": {
+        "blog": {
+            "handlers": ["blog_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
